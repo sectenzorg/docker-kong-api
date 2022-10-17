@@ -17,9 +17,11 @@ Then create your own user
 ### Example App
 ```
 <your_ip>:3000
-/one
-/two
-/three
+/hiji
+/dua
+/tilu
+/opat
+/lima
 ```
 
 Wait 1-2 minutes, until **Konga** ready to use!
