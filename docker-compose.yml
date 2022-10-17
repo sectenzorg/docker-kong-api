@@ -33,7 +33,6 @@ services:
     image: kong:2.3.3
     restart: always
     environment:
-      - KONG_LOG_LEVEL: ${KONG_LOG_LEVEL}
       - KONG_DATABASE: ${KONG_DATABASE}
       - KONG_PG_HOST: ${KONG_DB_HOST}
       - KONG_PG_DATABASE: ${KONG_DB_NAME}
