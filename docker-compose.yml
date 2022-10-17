@@ -1,0 +1,103 @@
+version: "3.8"
+services:
+  kong-database:
+    image: postgres:9.6
+    restart: always
+    volumes:
+      - postgres-kong:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER: ${KONG_DB_USERNAME}
+      - POSTGRES_PASSWORD: ${KONG_DB_PASSWORD}
+      - POSTGRES_DB: ${KONG_DB_NAME}
+    ports:
+      - 5432:5432
+    networks:
+      - kong-net
+
+  kong-migrate:
+    image: kong:2.3.3
+    restart: on-failure
+    command: kong migrations bootstrap
+    environment:
+      - KONG_DATABASE: ${KONG_DATABASE}
+      - KONG_PG_HOST: ${KONG_DB_HOST}
+      - KONG_PG_DATABASE: ${KONG_DB_NAME}
+      - KONG_PG_USER: ${KONG_DB_USERNAME}
+      - KONG_PG_PASSWORD: ${KONG_DB_PASSWORD}
+    depends_on:
+      - kong-database
+    networks:
+      - kong-net
+
+  kong:
+    image: kong:2.3.3
+    restart: always
+    environment:
+      - KONG_LOG_LEVEL=debug
+      - KONG_DATABASE: ${KONG_DB}
+      - KONG_PG_HOST: ${KONG_DB_HOST}
+      - KONG_PG_DATABASE: ${KONG_DB_NAME}
+      - KONG_PG_USER: ${KONG_DB_USERNAME}
+      - KONG_PG_PASSWORD: ${KONG_DB_PASSWORD}
+      - KONG_PROXY_ACCESS_LOG: ${KONG_PROXY_ACCESS_LOG}
+      - KONG_PROXY_ACCESS_LOG: ${KONG_PROXY_ACCESS_LOG}
+      - KONG_ADMIN_ACCESS_LOG: ${KONG_ADMIN_ACCESS_LOG}
+      - KONG_PROXY_ERROR_LOG: ${KONG_PROXY_ERROR_LOG}
+      - KONG_ADMIN_ERROR_LOG: ${KONG_ADMIN_ERROR_LOG}
+      - KONG_ADMIN_LISTEN: ${KONG_ADMIN_LISTEN}
+      - KONG_PROXY_LISTEN: ${KONG_PROXY_LISTEN}
+      - KONG_PROXY_LISTEN_SSL: ${KONG_PROXY_LISTEN_SSL}
+    ports:
+      - 8000:8000
+      - 8443:8443
+      - 8001:8001
+      - 8444:8444
+    depends_on:
+      - kong-migrate
+      - kong-database
+    networks:
+      - kong-net
+
+  konga-prepare:
+    image: pantsel/konga:0.14.9
+    command: "-c prepare -a postgres -u postgresql://${KONG_DB_USERNAME}:${KONG_DB_PASSWORD}@${KONG_DB_HOST}:${KONG_DB_PORT}/${KONGA_DB_NAME}"
+    networks:
+      - kong-net
+    restart: on-failure
+    links:
+      - kong-database
+    depends_on:
+      - kong-database
+
+  konga:
+    image: pantsel/konga:0.14.9
+    restart: on-failure
+    networks:
+      - kong-net
+    environment:
+      - DB_ADAPTER: ${KONGA_DB_ADAPTER}
+      - DB_HOST: ${KONGA_DB_HOST}
+      - DB_USER: ${KONG_DB_USERNAME}
+      - DB_PASSWORD: ${KONG_DB_PASSWORD}
+      - TOKEN_SECRET: ${KONGA_TOKEN}
+      - DB_DATABASE: ${KONGA_DB_NAME}
+      - NODE_ENV: ${KONGA_ENV}
+    depends_on:
+      - kong-database
+    ports:
+      - "1337:1337"
+
+  project:
+    build: ./project-test
+    restart: always
+    networks: 
+      - kong-net
+    ports:
+      - "3000:3000"
+
+networks:
+  kong-net:
+    driver: bridge
+
+volumes:
+  postgres-kong:
