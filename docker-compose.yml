@@ -93,6 +93,7 @@ services:
 
   project:
     build: ./project-test
+    container_name: kong-api-project-test
     restart: always
     networks: 
       - kong-net
