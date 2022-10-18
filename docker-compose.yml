@@ -2,6 +2,7 @@ version: "3.8"
 services:
   kong-database:
     image: postgres:9.6
+    container_name: kong-postgres
     restart: always
     volumes:
       - postgres-kong:/var/lib/postgresql/data
@@ -16,6 +17,7 @@ services:
 
   kong-migrate:
     image: kong:2.8.1
+    container_name: kong-migrate
     restart: on-failure
     command: kong migrations bootstrap
     environment:
@@ -31,6 +33,7 @@ services:
 
   kong:
     image: kong:2.8.1
+    container_name: kong
     restart: always
     environment:
       - KONG_LOG_LEVEL=debug
@@ -59,6 +62,7 @@ services:
 
   konga-prepare:
     image: pantsel/konga:0.14.9
+    container_name: konga-prepare
     command: "-c prepare -a postgres -u postgresql://user:54321@kong-database:5432/konga_db"
     networks:
       - kong-net
@@ -70,6 +74,7 @@ services:
 
   konga:
     image: pantsel/konga:0.14.9
+    container_name: konga
     restart: on-failure
     networks:
       - kong-net
