@@ -5,6 +5,8 @@
 <your_ip>:1337
 Then create your own user
 ```
+![Alt text](konga.jpg?raw=true "Konga Access")
+
 
 ### Access Kong
 ```
