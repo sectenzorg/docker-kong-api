@@ -6,46 +6,46 @@ services:
     volumes:
       - postgres-kong:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER: ${KONG_DB_USERNAME}
-      - POSTGRES_PASSWORD: ${KONG_DB_PASSWORD}
-      - POSTGRES_DB: ${KONG_DB_NAME}
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=54321
+      - POSTGRES_DB=kong_db
     ports:
       - 5432:5432
     networks:
       - kong-net
 
   kong-migrate:
-    image: kong:2.3.3
+    image: kong:2.8.1
     restart: on-failure
     command: kong migrations bootstrap
     environment:
       - KONG_DATABASE=postgres
-      - KONG_PG_HOST: ${KONG_DB_HOST}
-      - KONG_PG_DATABASE: ${KONG_DB_NAME}
-      - KONG_PG_USER: ${KONG_DB_USERNAME}
-      - KONG_PG_PASSWORD: ${KONG_DB_PASSWORD}
+      - KONG_PG_HOST=kong-database
+      - KONG_PG_DATABASE=kong_db
+      - KONG_PG_USER=user
+      - KONG_PG_PASSWORD=54321
     depends_on:
       - kong-database
     networks:
       - kong-net
 
   kong:
-    image: kong:2.3.3
+    image: kong:2.8.1
     restart: always
     environment:
+      - KONG_LOG_LEVEL=debug
       - KONG_DATABASE=postgres
-      - KONG_PG_HOST: ${KONG_DB_HOST}
-      - KONG_PG_DATABASE: ${KONG_DB_NAME}
-      - KONG_PG_USER: ${KONG_DB_USERNAME}
-      - KONG_PG_PASSWORD: ${KONG_DB_PASSWORD}
-      - KONG_PROXY_ACCESS_LOG: ${KONG_PROXY_ACCESS_LOG}
-      - KONG_PROXY_ACCESS_LOG: ${KONG_PROXY_ACCESS_LOG}
-      - KONG_ADMIN_ACCESS_LOG: ${KONG_ADMIN_ACCESS_LOG}
-      - KONG_PROXY_ERROR_LOG: ${KONG_PROXY_ERROR_LOG}
-      - KONG_ADMIN_ERROR_LOG: ${KONG_ADMIN_ERROR_LOG}
-      - KONG_ADMIN_LISTEN: ${KONG_ADMIN_LISTEN}
-      - KONG_PROXY_LISTEN: ${KONG_PROXY_LISTEN}
-      - KONG_PROXY_LISTEN_SSL: ${KONG_PROXY_LISTEN_SSL}
+      - KONG_PG_HOST=kong-database
+      - KONG_PG_DATABASE=kong_db
+      - KONG_PG_USER=user
+      - KONG_PG_PASSWORD=54321
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001
+      - KONG_PROXY_LISTEN=0.0.0.0:8000
+      - KONG_PROXY_LISTEN_SSL=0.0.0.0:8443
     ports:
       - 8000:8000
       - 8443:8443
@@ -59,7 +59,7 @@ services:
 
   konga-prepare:
     image: pantsel/konga:0.14.9
-    command: "-c prepare -a postgres -u postgresql://${KONG_DB_USERNAME}:${KONG_DB_PASSWORD}@${KONG_DB_HOST}:${KONG_DB_PORT}/${KONGA_DB_NAME}"
+    command: "-c prepare -a postgres -u postgresql://user:54321@kong-database:5432/konga_db"
     networks:
       - kong-net
     restart: on-failure
@@ -74,13 +74,13 @@ services:
     networks:
       - kong-net
     environment:
-      - DB_ADAPTER: ${KONGA_DB_ADAPTER}
-      - DB_HOST: ${KONGA_DB_HOST}
-      - DB_USER: ${KONGA_DB_USERNAME}
-      - DB_PASSWORD: ${KONGA_DB_PASSWORD}
-      - TOKEN_SECRET: ${KONGA_TOKEN}
-      - DB_DATABASE: ${KONGA_DB_NAME}
-      - NODE_ENV: ${KONGA_ENV}
+      - DB_ADAPTER=postgres
+      - DB_HOST=kong-database
+      - DB_USER=user
+      - DB_PASSWORD=54321
+      - TOKEN_SECRET=some-token-secret
+      - DB_DATABASE=konga_db
+      - NODE_ENV=production
     depends_on:
       - kong-database
     ports:
