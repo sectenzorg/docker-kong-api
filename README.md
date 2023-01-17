@@ -14,7 +14,6 @@ Then create your own user
 <your_ip>:8000
 # Kong Admin
 <your_ip>:8001
-
 ```
 
 ### Example App
